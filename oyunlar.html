@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEBAR - Oyun Laboratuvarı</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* --- BURASI SADECE BU SAYFAYA ÖZEL TASARIM --- */
+        /* --- BAŞKA DOSYADAN ETKİLENMEZ --- */
+
+        .games-layout {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        /* KARTLARI YAN YANA DİZEN KUTU */
+        .games-grid {
+            display: flex;           /* Flexbox kullan */
+            flex-direction: row;     /* Yan yana diz */
+            flex-wrap: wrap;         /* Sığmazsa alta geç */
+            justify-content: center; /* Ortala */
+            gap: 40px;               /* Kartlar arası boşluk */
+            width: 100%;
+        }
+
+        /* LİNKLERİN YAPISI */
+        .game-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        /* KART TASARIMI */
+        .game-card {
+            background: rgba(20, 20, 30, 0.9); /* Koyu Arka Plan */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            
+            /* KART BOYUTLARI (Sabit) */
+            width: 280px; 
+            height: 350px;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* HOVER (Üzerine Gelince) */
+        .game-card:hover {
+            transform: translateY(-15px); /* Yukarı zıpla */
+            border-color: #555;
+            background: rgba(30, 30, 45, 1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        }
+
+        /* YENİ OYUN KARTI ÖZEL RENGİ */
+        .energy-card:hover {
+            border-color: #00f2ff;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+        }
+
+        /* İKONLAR */
+        .game-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            transition: transform 0.4s;
+        }
+        .game-card:hover .game-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        /* YAZILAR */
+        .game-card h3 {
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .game-card p {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* ETİKETLER */
+        .game-tag {
+            font-size: 0.75rem;
+            padding: 6px 15px;
+            border: 1px solid #ff0055;
+            color: #ff0055;
+            border-radius: 50px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: rgba(255, 0, 85, 0.1);
+        }
+
+        /* YAKINDA KARTI (+) */
+        .add-new {
+            border: 2px dashed #444;
+            background: transparent;
+            cursor: default;
+        }
+        .add-new:hover {
+            border-color: #666;
+            transform: none; /* Zıplamasın */
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .plus-icon {
+            font-size: 4rem;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        /* AYIRICI ÇİZGİ */
+        .separator-white {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #333, transparent);
+            margin: 50px 0;
+        }
+
+        /* MOBİL UYUMLULUK */
+        @media screen and (max-width: 650px) {
+            .games-grid {
+                flex-direction: column; /* Alt alta diz */
+                align-items: center;
+            }
+            .game-card {
+                width: 100%;
+                max-width: 320px; /* Ekrana sığdır */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="star-container"></div>
+
+    <header>
+        <a href="index.html">
+            <div class="logo">MEBAR <span class="highlight">STÜDYO</span></div>
+        </a>
+        <nav>
+            <a href="profil.html" class="nav-item"><span class="icon">👤</span> Profil</a>
+            <a href="index.html" class="nav-item"><span class="icon">⚡</span> Hesaplamalar</a>
+            <a href="oyunlar.html" class="nav-item active-page"><span class="icon">🎮</span> Oyunlar</a>
+        </nav>
+    </header>
+
+    <main class="games-layout">
+        
+        <hr class="separator-white full-width">
+
+        <h2 class="section-title">OYUN PROJELERİ</h2>
+
+        <div class="games-grid">
+                
+                <a href="oyun-cember.html" class="game-link">
+                    <div class="game-card">
+                        <div class="game-icon" style="color: #ff0055;">⭕</div>
+                        <h3>NEON LOCK</h3>
+                        <p>Sistemi Hackle</p>
+                        <span class="game-tag">Refleks</span>
+                    </div>
+                </a>
+
+                <a href="energy-match.html" class="game-link">
+                    <div class="game-card energy-card">
+                        <div class="game-icon" style="color: #00f2ff; text-shadow: 0 0 20px #00f2ff;">⚡</div>
+                        <h3>ENERJİ HATTI</h3>
+                        <p>Akımı Birleştir</p>
+                        <span class="game-tag" style="color:#00f2ff; border-color:#00f2ff; background:rgba(0,242,255,0.1);">Puzzle</span>
+                    </div>
+                </a>
+
+                <div class="game-card add-new">
+                    <div class="plus-icon">+</div>
+                    <h3>Yakında...</h3>
+                </div>
+
+        </div>
+
+        <hr class="separator-white full-width">
+
+    </main>
+
+    <footer>
+        <p>Geliştirici: <strong>Mehmet Emin Bahadır</strong> © 2024</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

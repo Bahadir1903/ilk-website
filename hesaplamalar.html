@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEBAR Stüdyo V7 - Aydınlık Sürüm</title>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        /* --- TEMEL AYARLAR --- */
+        :root {
+            --bg-dark: #050508;
+            --panel-bg: rgba(15, 15, 20, 0.95);
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #00ff66;
+            --neon-red: #ff0055;
+            --neon-orange: #ffaa00;
+            --text-main: #e0e0e0;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            font-family: 'Segoe UI', 'Roboto', monospace;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* --- HAVALI SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a10; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; transition: 0.3s; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--neon-purple); }
+
+        /* --- DASHBOARD --- */
+        #dashboard-container { transition: opacity 0.5s ease; }
+        body.mode-3d #dashboard-container { opacity: 0; pointer-events: none; }
+
+        header {
+            background: rgba(10, 10, 15, 0.9); padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; }
+        .highlight { color: var(--neon-blue); }
+
+        .calc-layout { display: flex; height: calc(100vh - 70px); }
+        
+        /* Sol Menü */
+        .modules-list { width: 280px; background: #0a0a0e; border-right: 1px solid var(--border-color); padding: 20px; }
+        .module-item {
+            padding: 15px; margin-bottom: 10px; background: rgba(255,255,255,0.02);
+            border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; display: flex; align-items: center;
+        }
+        .module-item:hover { background: rgba(255,255,255,0.05); border-color: #444; }
+        .module-item.active-item { border-color: var(--neon-blue); background: rgba(0, 242, 255, 0.05); }
+        .module-item.special-lab { border-left: 3px solid var(--neon-purple); }
+
+        /* Sağ Alan */
+        .calc-screen { flex: 1; padding: 30px; overflow-y: auto; }
+        .panel { display: none; }
+        .panel.active-panel { display: block; animation: fadeUp 0.4s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* --- OHM MODÜLÜ STİLLERİ --- */
+        .circuit-container {
+            position: relative; padding: 20px; background: #0a0a0e; border-radius: 10px; 
+            border: 1px solid #333; margin-bottom: 20px; text-align: center; overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .electron-path {
+            fill: none; stroke: var(--neon-blue); stroke-width: 3;
+            stroke-dasharray: 10 10; stroke-linecap: round; opacity: 0.3; transition: stroke 0.3s;
+        }
+        .flowing { animation: flow 1s linear infinite; opacity: 1; }
+        @keyframes flow { to { stroke-dashoffset: -20; } }
+        
+        .status-danger { border-color: var(--neon-red); box-shadow: inset 0 0 30px rgba(255,0,85,0.2); animation: shake 0.5s infinite; }
+        .status-success { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,102,0.1); }
+        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-2px)} 75% {transform:translateX(2px)} }
+
+        .input-row { display: flex; gap: 20px; margin-bottom: 20px; }
+        .input-group { flex: 1; }
+        .input-group label { display: block; color: #888; margin-bottom: 5px; font-size: 0.8rem; }
+        input { width: 100%; background: #15151a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 4px; font-family: monospace; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--neon-blue); }
+
+        /* --- MUKAVEMET STİLLERİ --- */
+        .formulas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .formula-card { background: #15151a; border: 1px solid #333; border-radius: 8px; padding: 15px; transition: 0.3s; }
+        .formula-card:hover { border-color: var(--neon-blue); transform: translateY(-3px); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--neon-blue); font-weight: bold; font-size: 0.9rem; }
+        .mini-inputs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .mini-btn { width: 100%; padding: 8px; background: #222; color: #fff; border: none; cursor: pointer; border-radius: 4px; font-size: 0.8rem; transition:0.2s; }
+        .mini-btn:hover { background: var(--neon-purple); }
+        .mini-result { margin-top: 10px; text-align: center; font-weight: bold; color: var(--neon-green); background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; }
+
+        /* --- 3D LAB ARAYÜZÜ --- */
+        #lab-3d-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s; display: none;
+        }
+        body.mode-3d #lab-3d-wrapper { opacity: 1; pointer-events: auto; display: block; }
+        .lab-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        .side-panel {
+            position: absolute; top: 20px; bottom: 20px;
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            backdrop-filter: blur(20px); border-radius: 8px; pointer-events: auto;
+            display: flex; flex-direction: column; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .left-panel { left: 20px; width: 280px; transform: translateX(-350px); }
+        .right-panel { right: 20px; width: 360px; transform: translateX(350px); }
+        body.mode-3d .left-panel, body.mode-3d .right-panel { transform: translateX(0); }
+
+        .panel-header-tech {
+            padding: 15px; border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; color: var(--neon-purple);
+            text-transform: uppercase; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .cat-header { font-size: 0.7rem; color: #666; padding: 10px 15px 5px; font-weight: bold; border-bottom: 1px solid #222; margin-top: 10px; }
+        .mat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; font-size: 0.9rem; }
+        .mat-item:hover { background: rgba(188, 19, 254, 0.1); color: #fff; padding-left: 20px; }
+        .mat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
+
+        .telemetry-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; padding: 10px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); }
+        .tele-box { text-align: center; }
+        .tele-label { font-size: 0.6rem; color: #666; display: block; }
+        .tele-val { font-size: 0.9rem; font-family: monospace; color: var(--neon-blue); font-weight: bold; }
+
+        .force-list-wrapper { flex: 1; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); margin: 10px; border: 1px solid #222; border-radius: 4px; max-height: 200px; }
+        .force-row { display: flex; align-items: center; justify-content: space-between; background: #15151a; padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--neon-green); }
+
+        .action-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, #330033, #550055); border: 1px solid var(--neon-purple); color: #fff; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.3s; }
+        .action-btn:hover { background: var(--neon-purple); box-shadow: 0 0 20px var(--neon-purple); }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: rgba(0,0,0,0.8); border: 1px solid #555; color: #fff; padding: 10px 30px;
+            border-radius: 30px; cursor: pointer; pointer-events: auto; transition: 0.5s; font-size: 0.8rem;
+        }
+        body.mode-3d .back-btn { transform: translateX(-50%) translateY(0); }
+        .back-btn:hover { border-color: var(--neon-purple); color: var(--neon-purple); }
+
+        .big-btn { width: 100%; padding: 15px; background: var(--neon-blue); color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+        .big-btn:hover { background: #fff; box-shadow: 0 0 15px var(--neon-blue); }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-container">
+     <header>
+    <div class="logo">
+        <a href="index.html" style="text-decoration: none; color: inherit;">
+            MEBAR <span class="highlight">LABS</span>
+        </a>
+    </div>
+    <div style="font-size:0.8rem; color:#666; font-family:monospace;">SYS.V7.LIGHT</div>
+</header>
+
+        <main class="calc-layout">
+            <aside class="modules-list">
+                <div class="module-item active-item" onclick="switchPanel('elektrik', this)">
+                    <span class="mod-icon">⚡</span>
+                    <span>Ohm Analiz</span>
+                </div>
+                <div class="module-item" onclick="switchPanel('mukavemet', this)">
+                    <span class="mod-icon">🏗️</span>
+                    <span>Mukavemet</span>
+                </div>
+                <div class="module-item special-lab" onclick="open3DLab()">
+                    <span class="mod-icon">🧪</span>
+                    <span style="color:var(--neon-purple); font-weight:bold;">Kompozit Lab Pro</span>
+                </div>
+            </aside>
+
+            <section class="calc-screen">
+                <div id="panel-elektrik" class="panel active-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:10px; margin-bottom:20px;">
+                        <h2>OHM SİMÜLATÖRÜ</h2>
+                        <div id="ohm-status-text" style="color:#666; font-size:0.8rem; font-weight:bold;">SİSTEM BEKLEMEDE</div>
+                    </div>
+
+                    <div class="circuit-container" id="circuit-box">
+                        <svg width="300" height="120" viewBox="0 0 300 120">
+                            <path d="M 30 90 L 270 90 L 270 30 L 30 30 L 30 90" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                            <path id="electron-line" class="electron-path" d="M 30 90 L 270 90 L 270 30 L 30 30 L 30 90" />
+                            <rect x="130" y="20" width="40" height="20" fill="#111" stroke="#fff" stroke-width="2"/>
+                            <text x="142" y="35" fill="#fff" font-size="12" font-weight:bold>R</text>
+                            <circle cx="30" cy="60" r="15" fill="#111" stroke="#fff" stroke-width="2"/>
+                            <text x="25" y="65" fill="#fff" font-size="12" font-weight:bold>V</text>
+                        </svg>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>VOLTAJ (V)</label>
+                            <input type="number" id="ohm-v" placeholder="12">
+                        </div>
+                        <div class="input-group">
+                            <label>DİRENÇ (Ω)</label>
+                            <input type="number" id="ohm-r" placeholder="4">
+                        </div>
+                    </div>
+                    <button class="big-btn" onclick="runOhm()">⚡ ENERJİYİ VER</button>
+                    <div style="margin-top:20px; text-align:center;">
+                        <span style="color:#888;">AKIM:</span>
+                        <span id="ohm-res" style="font-size:2rem; font-weight:bold; color:#fff; text-shadow:0 0 10px #fff;">0.00 A</span>
+                    </div>
+                </div>
+                
+                <div id="panel-mukavemet" class="panel">
+                    <div style="border-bottom:2px solid #333; padding-bottom:10px; margin-bottom:20px;">
+                        <h2>MUKAVEMET MÜHENDİSLİĞİ</h2>
+                    </div>
+                    <div class="formulas-grid">
+                        <div class="formula-card">
+                            <div class="card-header"><span>Normal Gerilme (σ)</span></div>
+                            <div class="mini-inputs"><input type="number" id="muk-1-f" placeholder="F (N)"><input type="number" id="muk-1-a" placeholder="A (mm²)"></div>
+                            <button class="mini-btn" onclick="calcMuk(1)">HESAPLA</button><div class="mini-result" id="res-muk-1">σ = 0 MPa</div>
+                        </div>
+                        <div class="formula-card">
+                            <div class="card-header"><span>Uzama (ΔL)</span></div>
+                            <div class="mini-inputs"><input type="number" id="muk-2-l" placeholder="L (mm)"><input type="number" id="muk-2-eps" placeholder="ε (Birim)"></div>
+                            <button class="mini-btn" onclick="calcMuk(2)">HESAPLA</button><div class="mini-result" id="res-muk-2">ΔL = 0 mm</div>
+                        </div>
+                        <div class="formula-card">
+                            <div class="card-header"><span>Kesme (τ)</span></div>
+                            <div class="mini-inputs"><input type="number" id="muk-3-v" placeholder="V (N)"><input type="number" id="muk-3-a" placeholder="A (mm²)"></div>
+                            <button class="mini-btn" onclick="calcMuk(3)">HESAPLA</button><div class="mini-result" id="res-muk-3">τ = 0 MPa</div>
+                        </div>
+                        <div class="formula-card">
+                            <div class="card-header"><span>Hooke (E)</span></div>
+                            <div class="mini-inputs"><input type="number" id="muk-4-sig" placeholder="σ (MPa)"><input type="number" id="muk-4-eps" placeholder="ε"></div>
+                            <button class="mini-btn" onclick="calcMuk(4)">HESAPLA</button><div class="mini-result" id="res-muk-4">E = 0 GPa</div>
+                        </div>
+                        <div class="formula-card" style="border-color: var(--neon-orange);">
+                            <div class="card-header" style="color:var(--neon-orange);"><span>Güvenlik (n)</span></div>
+                            <div class="mini-inputs"><input type="number" id="muk-5-akma" placeholder="Akma"><input type="number" id="muk-5-emniyet" placeholder="Oluşan"></div>
+                            <button class="mini-btn" style="color:var(--neon-orange);" onclick="calcMuk(5)">HESAPLA</button><div class="mini-result" id="res-muk-5" style="color:var(--neon-orange);">n = 0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="lab-3d-wrapper">
+        <button class="back-btn" onclick="close3DLab()">← ANA KONSOLA DÖN</button>
+        
+        <div class="lab-ui">
+            <div class="side-panel left-panel">
+                <div class="panel-header-tech"><span>MALZEME VERİTABANI</span><span style="font-size:0.6rem; opacity:0.5;">DB_V7</span></div>
+                <div class="custom-scroll" id="mat-library" style="flex:1; overflow-y:auto;"></div>
+                <div style="padding:15px; border-top:1px solid var(--border-color);">
+                    <button onclick="clearScene()" style="width:100%; background:transparent; border:1px solid var(--neon-red); color:var(--neon-red); padding:8px; cursor:pointer; font-family:monospace;">// SAHNEYİ_TEMİZLE</button>
+                </div>
+            </div>
+            <div class="side-panel right-panel">
+                <div class="panel-header-tech"><span>FİZİK KONTROL ÜNİTESİ</span><div style="width:10px; height:10px; background:var(--neon-green); border-radius:50%; box-shadow:0 0 10px var(--neon-green);"></div></div>
+                <div class="telemetry-grid">
+                    <div class="tele-box"><span class="tele-label">SICAKLIK</span><span class="tele-val" id="tele-temp">24°C</span></div>
+                    <div class="tele-box"><span class="tele-label">BÜTÜNLÜK</span><span class="tele-val" id="tele-int">100%</span></div>
+                    <div class="tele-box"><span class="tele-label">YÜK</span><span class="tele-val" id="tele-load">0 N</span></div>
+                </div>
+                <div style="padding:15px; border-bottom:1px solid var(--border-color);">
+                    <label style="font-size:0.7rem; color:#888; display:block; margin-bottom:5px;">GEOMETRİ TİPİ</label>
+                    <select id="shapeType" style="width:100%; background:#0a0a0e; color:#fff; border:1px solid #333; padding:8px; font-family:monospace;">
+                        <option value="box">Kiriş / Profil</option>
+                        <option value="cylinder">Silindir / Pim</option>
+                    </select>
+                </div>
+                <div style="display:flex; padding:10px; gap:5px;">
+                    <button onclick="setMode('translate')" style="flex:1; background:#222; color:#fff; border:none; padding:8px; cursor:pointer;">TAŞI</button>
+                    <button onclick="setMode('rotate')" style="flex:1; background:#222; color:#fff; border:none; padding:8px; cursor:pointer;">DÖNDÜR</button>
+                    <button onclick="setMode('scale')" style="flex:1; background:#222; color:#fff; border:none; padding:8px; cursor:pointer;">ÖLÇEK</button>
+                </div>
+                <div style="padding:0 15px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; color:var(--neon-green); font-weight:bold;">AKTİF YÜKLER</span>
+                    <button onclick="addForce()" style="background:var(--neon-green); border:none; color:#000; width:20px; height:20px; font-weight:bold; cursor:pointer; border-radius:3px;">+</button>
+                </div>
+                <div class="force-list-wrapper custom-scroll" id="force-container">
+                    <div style="text-align:center; color:#444; font-size:0.8rem; padding:20px;">Yük tanımlanmadı...</div>
+                </div>
+                <div style="padding:15px; margin-top:auto;">
+                    <button class="action-btn" onclick="startSim()">SİMÜLASYONU BAŞLAT</button>
+                    <div id="sim-status" style="text-align:center; font-size:0.8rem; margin-top:10px; color:#666; height:15px;">Sistem Hazır</div>
+                </div>
+            </div>
+        </div>
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        // --- OHM SİMÜLATÖRÜ ---
+        function runOhm() {
+            const V = parseFloat(document.getElementById('ohm-v').value);
+            const R = parseFloat(document.getElementById('ohm-r').value);
+            const path = document.getElementById('electron-line');
+            const box = document.getElementById('circuit-box');
+            const resText = document.getElementById('ohm-res');
+            const statusText = document.getElementById('ohm-status-text');
+
+            box.className = 'circuit-container'; path.classList.remove('flowing'); path.style.stroke = "var(--neon-blue)"; path.style.animationDuration = "1s";
+            if (!V || V <= 0) return;
+            if (R <= 0.1) {
+                resText.innerText = "SONSUZ A"; resText.style.color = "var(--neon-red)"; statusText.innerText = "⚠️ KRİTİK HATA: KISA DEVRE!"; statusText.style.color = "var(--neon-red)"; box.classList.add('status-danger'); path.style.stroke = "var(--neon-red)"; return;
+            }
+            const I = V / R; resText.innerText = I.toFixed(2) + " A"; path.classList.add('flowing');
+            if (I > 10) {
+                resText.style.color = "var(--neon-orange)"; statusText.innerText = "⚠️ DİKKAT: YÜKSEK AKIM"; statusText.style.color = "var(--neon-orange)"; path.style.stroke = "var(--neon-orange)"; path.style.animationDuration = "0.2s"; box.style.borderColor = "var(--neon-orange)";
+            } else {
+                resText.style.color = "var(--neon-green)"; statusText.innerText = "✅ SİSTEM OPTİMAL"; statusText.style.color = "var(--neon-green)"; path.style.stroke = "var(--neon-green)"; path.style.animationDuration = Math.max(0.2, 2 - (I/5)) + "s"; box.classList.add('status-success');
+            }
+        }
+
+        // --- MUKAVEMET SİMÜLATÖRÜ ---
+        function calcMuk(type) {
+            if(type === 1) { const f = parseFloat(document.getElementById('muk-1-f').value)||0; const a = parseFloat(document.getElementById('muk-1-a').value)||1; document.getElementById('res-muk-1').innerText = "σ = " + (f/a).toFixed(2) + " MPa"; }
+            else if(type === 2) { const l = parseFloat(document.getElementById('muk-2-l').value)||0; const eps = parseFloat(document.getElementById('muk-2-eps').value)||0; document.getElementById('res-muk-2').innerText = "ΔL = " + (l*eps).toFixed(2) + " mm"; }
+            else if(type === 3) { const v = parseFloat(document.getElementById('muk-3-v').value)||0; const a = parseFloat(document.getElementById('muk-3-a').value)||1; document.getElementById('res-muk-3').innerText = "τ = " + (v/a).toFixed(2) + " MPa"; }
+            else if(type === 4) { const s = parseFloat(document.getElementById('muk-4-sig').value)||0; const e = parseFloat(document.getElementById('muk-4-eps').value)||1; document.getElementById('res-muk-4').innerText = "E = " + ((s/e)/1000).toFixed(2) + " GPa"; }
+            else if(type === 5) { const akma = parseFloat(document.getElementById('muk-5-akma').value)||1; const emniyet = parseFloat(document.getElementById('muk-5-emniyet').value)||1; const n = akma / emniyet; const el = document.getElementById('res-muk-5'); el.innerText = "n = " + n.toFixed(2); el.style.color = n < 1 ? "var(--neon-red)" : "var(--neon-green)"; }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TransformControls } from 'three/addons/controls/TransformControls.js';
+
+        const MATERIALS = [
+            { cat: "METALLER", items: [{ name: "Yapı Çeliği S235", color: 0x555555, emissive: 0x111111, yield: 235 }, { name: "Havacılık Alüminyumu", color: 0xaaccff, emissive: 0x001122, yield: 450 }, { name: "Titanyum Alaşım", color: 0x887799, emissive: 0x221133, yield: 900 }, { name: "Bakır İletken", color: 0xb87333, emissive: 0x331100, yield: 200 }]},
+            { cat: "POLİMERLER", items: [{ name: "ABS Plastik", color: 0xffffdd, emissive: 0x222200, yield: 40 }, { name: "Polikarbonat (Şeffaf)", color: 0x00ffff, emissive: 0x003333, yield: 60, trans: true }]},
+            { cat: "UZAY ÇAĞI (SCI-FI)", items: [{ name: "Karbon Fiber Örgü", color: 0x111111, emissive: 0x000000, yield: 1600 }, { name: "Grafen Kompozit", color: 0x222222, emissive: 0x111111, yield: 2500 }, { name: "Seramik Zırh", color: 0xffffff, emissive: 0xaaaaaa, yield: 3000 }, { name: "Plazma Enerji", color: 0xff00ff, emissive: 0xff00ff, yield: 50, trans: true }]}
+        ];
+
+        let scene, camera, renderer, transformControl, parts = [], forces = [];
+        let selectedPart = null;
+
+        window.open3DLab = () => { document.body.classList.add('mode-3d'); if(!renderer) initThree(); updateTelemetry(); };
+        window.close3DLab = () => document.body.classList.remove('mode-3d');
+        window.switchPanel = (pid, btn) => { document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel')); document.getElementById('panel-' + pid).classList.add('active-panel'); document.querySelectorAll('.module-item').forEach(b => b.classList.remove('active-item')); btn.classList.add('active-item'); };
+
+        function initThree() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0x050508); scene.fog = new THREE.FogExp2(0x050508, 0.015);
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000); camera.position.set(10, 10, 15);
+            renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            container.appendChild(renderer.domElement);
+
+            // --- GÜNCELLENMİŞ IŞIKLANDIRMA ---
+            // 1. Daha parlak genel ortam ışığı (0.4 -> 0.6)
+            const amb = new THREE.AmbientLight(0xffffff, 0.6); 
+            scene.add(amb);
+
+            // 2. Ana Neon Spot Işığı (Mevcut)
+            const spot = new THREE.SpotLight(0x00f2ff, 20); spot.position.set(10, 20, 5); spot.castShadow = true; spot.angle = 0.5; scene.add(spot);
+            
+            // 3. Arka Mor Işık (Mevcut)
+            const rim = new THREE.PointLight(0xbc13fe, 5); rim.position.set(-10, 5, -10); scene.add(rim);
+            
+            // 4. YENİ: Ön Dolgu Işığı (Daha aydınlık detaylar için)
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            fillLight.position.set(-5, 10, 10);
+            scene.add(fillLight);
+
+            // 5. YENİ: Zemin Neon Parlaması
+            const groundGlow = new THREE.PointLight(0x00f2ff, 2, 15);
+            groundGlow.position.set(0, 0.5, 0);
+            scene.add(groundGlow);
+
+            const grid = new THREE.GridHelper(50, 50, 0x333333, 0x111111); scene.add(grid);
+
+            const orbit = new OrbitControls(camera, renderer.domElement); orbit.enableDamping = true;
+            transformControl = new TransformControls(camera, renderer.domElement);
+            transformControl.addEventListener('dragging-changed', e => orbit.enabled = !e.value);
+            scene.add(transformControl);
+
+            initUI(); animate(); addForce();
+        }
+
+        function initUI() {
+            const lib = document.getElementById('mat-library');
+            MATERIALS.forEach(cat => {
+                const h = document.createElement('div'); h.className = 'cat-header'; h.innerText = cat.cat; lib.appendChild(h);
+                cat.items.forEach(m => {
+                    const b = document.createElement('div'); b.className = 'mat-item';
+                    const hex = '#' + m.color.toString(16).padStart(6,'0');
+                    b.innerHTML = `<div style="display:flex; align-items:center;"><span class="mat-dot" style="background:${hex}; box-shadow:0 0 5px ${hex}"></span>${m.name}</div><span style="font-size:0.7rem; color:#666;">${m.yield} MPa</span>`;
+                    b.onclick = () => createPart(m); lib.appendChild(b);
+                });
+            });
+        }
+
+        function createPart(matData) {
+            const type = document.getElementById('shapeType').value;
+            let geo = type === 'cylinder' ? new THREE.CylinderGeometry(0.5, 0.5, 2, 32) : new THREE.BoxGeometry(2, 0.5, 1);
+            const mat = new THREE.MeshStandardMaterial({
+                color: matData.color, emissive: matData.emissive, emissiveIntensity: 0.3, roughness: 0.2, metalness: 0.8,
+                transparent: matData.trans || false, opacity: matData.trans ? 0.6 : 1
+            });
+            const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+            let y = 0.5; if(parts.length > 0) y = parts[parts.length-1].position.y + 1.2; mesh.position.y = y;
+            mesh.userData = { ...matData, origMat: mat, id: Math.random() };
+            scene.add(mesh); parts.push(mesh); selectPart(mesh);
+        }
+
+        window.addForce = () => { forces.push({ id: Date.now(), val: 1000 }); renderForces(); };
+        window.removeForce = (id) => { forces = forces.filter(f => f.id !== id); renderForces(); };
+        window.updateForceVal = (id, val) => { const f = forces.find(x => x.id === id); if(f) f.val = parseFloat(val); updateTelemetry(); };
+
+        function renderForces() {
+            const con = document.getElementById('force-container'); con.innerHTML = '';
+            if(forces.length === 0) { con.innerHTML = '<div style="text-align:center; color:#444; font-size:0.8rem; padding:20px;">Yük tanımlanmadı...</div>'; updateTelemetry(); return; }
+            forces.forEach((f, idx) => {
+                const row = document.createElement('div'); row.className = 'force-row';
+                row.innerHTML = `<span style="font-size:0.8rem; color:#ccc;">VEKTÖR #${idx+1}</span><div style="display:flex; align-items:center; gap:5px;"><input type="number" value="${f.val}" style="width:60px; background:#000; border:1px solid #333; color:var(--neon-blue); padding:4px;" onchange="updateForceVal(${f.id}, this.value)"><button onclick="removeForce(${f.id})" style="background:none; border:none; color:var(--neon-red); cursor:pointer;">×</button></div>`;
+                con.appendChild(row);
+            });
+            updateTelemetry();
+        }
+
+        function updateTelemetry() {
+            const total = forces.reduce((acc, curr) => acc + (curr.val || 0), 0);
+            document.getElementById('tele-load').innerText = total + " N";
+            document.getElementById('tele-temp').innerText = (24 + Math.random()*2).toFixed(1) + "°C";
+        }
+
+        window.startSim = () => {
+            if(parts.length === 0) return alert("Parça yok!");
+            const totalForce = forces.reduce((acc, curr) => acc + (curr.val || 0), 0);
+            const status = document.getElementById('sim-status');
+            status.innerText = "Analiz yapılıyor..."; status.style.color = "var(--neon-blue)";
+            setTimeout(() => {
+                let failure = false;
+                parts.forEach(p => {
+                    const stress = totalForce / 500;
+                    if(stress > p.userData.yield) { failure = true; p.material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true }); }
+                    else { p.material.emissiveIntensity = 2; p.material.emissive.setHex(0xffaa00); }
+                });
+                if(failure) {
+                    status.innerHTML = "⚠️ KRİTİK HATA: YAPI BOZULDU"; status.style.color = "var(--neon-red)";
+                    document.getElementById('tele-int').innerText = "0%"; document.getElementById('tele-int').style.color = "red";
+                } else {
+                    status.innerHTML = "✅ TEST BAŞARILI: GÜVENLİ"; status.style.color = "var(--neon-green)";
+                    document.getElementById('tele-int').innerText = "100%"; document.getElementById('tele-int').style.color = "var(--neon-blue)";
+                    setTimeout(() => { parts.forEach(p => { p.material = p.userData.origMat; p.material.emissiveIntensity = 0.3; p.material.emissive.setHex(p.userData.emissive); }); }, 2000);
+                }
+            }, 800);
+        };
+
+        window.setMode = (m) => transformControl.setMode(m);
+        window.clearScene = () => { parts.forEach(p => scene.remove(p)); parts = []; transformControl.detach(); };
+
+        const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+        window.addEventListener('mousedown', (e) => {
+            if(!document.body.classList.contains('mode-3d')) return;
+            if(e.target.closest('.side-panel') || e.target.closest('.back-btn')) return;
+            mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1;
+            raycaster.setFromCamera(mouse, camera); const ints = raycaster.intersectObjects(parts);
+            if(ints.length > 0) selectPart(ints[0].object);
+            else { transformControl.detach(); if(selectedPart) selectedPart.material.emissive.setHex(selectedPart.userData.emissive); selectedPart = null; }
+        });
+
+        function selectPart(obj) {
+            if(selectedPart) selectedPart.material.emissive.setHex(selectedPart.userData.emissive);
+            selectedPart = obj; selectedPart.material.emissive.setHex(0xffffff); transformControl.attach(obj);
+        }
+
+        function animate() { requestAnimationFrame(animate); if(Math.random()>0.95) updateTelemetry(); renderer.render(scene, camera); }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+</body>
+</html>

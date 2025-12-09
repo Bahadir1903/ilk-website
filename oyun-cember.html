@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Ring Unlock - Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at center, #050510 0%, #000000 100%);
+            font-family: 'Segoe UI', sans-serif; color: #e0e0e0;
+            overflow: hidden; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; height: 100vh;
+            touch-action: none;
+        }
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite alternate; }
+        @keyframes twinkle { 0% { opacity: 0.2; } 100% { opacity: 0.8; } }
+        
+        .back-btn {
+            position: fixed; /* Sayfa kaysa bile yerinde kalsın */
+            top: 40px; /* Yukarıdan biraz daha aşağıda (Çentik payı) */
+            left: 20px;
+            background: rgba(255, 0, 0, 0.3); /* Hafif kırmızımsı (Çıkış olduğu belli olsun) */
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff; 
+            padding: 12px 25px; /* Daha geniş tıklama alanı */
+            border-radius: 30px;
+            text-decoration: none; 
+            z-index: 9999; /* En üstte */
+            font-weight: bold; 
+            font-size: 1rem;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        .back-btn:hover { background: rgba(255, 0, 0, 0.6); }
+        .top-info { position: absolute; top: 20px; text-align: center; z-index: 10; }
+        .game-title { font-size: 1.5rem; letter-spacing: 4px; color: #00f2ff; text-shadow: 0 0 15px rgba(0,242,255,0.6); margin-bottom: 5px; }
+        .level-badge { background: #000; border: 1px solid #333; padding: 5px 15px; border-radius: 15px; color: #aaa; }
+        
+        canvas { z-index: 10; cursor: grab; }
+        
+        /* Alt Bilgi */
+        .controls-area { position: absolute; bottom: 30px; z-index: 20; text-align: center; }
+        .mobile-hint { font-size: 0.9rem; color: #ffd700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; text-shadow: 0 0 10px #ffd700; }
+        
+        /* ATEŞ BUTONU */
+        .launch-btn {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: radial-gradient(circle, #ff0055 0%, #990033 100%);
+            border: 4px solid rgba(255,255,255,0.2);
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+            cursor: pointer; position: relative; transition: transform 0.1s;
+        }
+        .launch-btn::after { content: "🔥"; font-size: 2.5rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .launch-btn:active { transform: scale(0.9); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 999; display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .modal-overlay.active { display: flex; }
+        .next-btn { background: transparent; border: 2px solid #00ff00; color: #00ff00; padding: 15px 40px; font-size: 1.2rem; border-radius: 30px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="stars"></div>
+    <a href="index.html" class="back-btn">← Çıkış</a>
+
+    <div class="top-info">
+        <div class="game-title">NEON LOCK</div>
+        <div class="level-badge" id="levelText">LEVEL 1</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controls-area">
+        <div class="mobile-hint" id="statusText">Seçmek için halkaya dokun</div>
+        <button class="launch-btn" id="shootBtn"></button>
+    </div>
+
+    <div class="modal-overlay" id="winModal">
+        <h1 style="color:#0f0; font-size:2.5rem; margin-bottom:20px;">KİLİT AÇILDI!</h1>
+        <button class="next-btn" id="nextLvlBtn">SONRAKİ SEVİYE ▶</button>
+    </div>
+
+<script>
+    // YILDIZLAR
+    const starBox = document.getElementById('stars');
+    for(let i=0; i<60; i++) {
+        let s = document.createElement('div');
+        s.className = 'star';
+        let size = Math.random()*2+1;
+        s.style.width = size+'px'; s.style.height = size+'px';
+        s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+        s.style.animationDelay = Math.random()*5+'s';
+        starBox.appendChild(s);
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    const setSize = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    };
+    setSize();
+    window.addEventListener('resize', setSize);
+
+    let level = 1;
+    let state = 'PLAYING';
+    let rings = [];
+    let activeRingIndex = 0; // Oyunun ilerlediği halka (Topun olduğu)
+    let selectedRingIndex = 0; // Kullanıcının ÇEVİRDİĞİ halka
+    
+    let launcher = { angle: -Math.PI / 2, rotationSpeed: 0 };
+    let ball = { dist: 0, angle: 0, speed: 0, radius: 8 };
+    let inputVelocity = 0;
+    const FRICTION = 0.94; // Biraz daha kaygan olsun
+
+    function normalizeAngle(angle) {
+        angle = angle % (Math.PI * 2);
+        if (angle < 0) angle += Math.PI * 2;
+        return angle;
+    }
+
+    function angleDifference(a1, a2) {
+        let diff = a1 - a2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        return diff;
+    }
+
+    function initLevel(lvl) {
+        state = 'PLAYING';
+        activeRingIndex = 0;
+        selectedRingIndex = 0;
+        rings = [];
+        launcher.angle = -Math.PI / 2;
+        launcher.rotationSpeed = lvl >= 3 ? (0.01 + lvl*0.002) : 0;
+        ball.dist = 0; ball.speed = 0;
+
+        let ringCount = Math.min(3 + Math.floor(lvl / 3), 6);
+        for(let i=0; i<ringCount; i++) {
+            let radius = 60 + (i * 45);
+            let autoSpeed = (lvl >= 5 && i % 2 !== 0) ? (Math.random()>0.5?1:-1)*(0.005+lvl*0.001) : 0;
+            rings.push({
+                r: radius,
+                angle: Math.random() * Math.PI * 2,
+                gapSize: Math.PI / 3.5,
+                thickness: 20, // Daha kalın halka = daha kolay seçim
+                autoSpeed: autoSpeed,
+                velocity: 0
+            });
+        }
+        document.getElementById('levelText').innerText = "LEVEL " + lvl;
+    }
+    initLevel(level);
+
+    // --- KONTROLLER (İYİLEŞTİRİLMİŞ) ---
+    let isDragging = false;
+    let lastX = 0;
+
+    // 1. SEÇME (TOUCHSTART)
+    canvas.addEventListener('touchstart', e => {
+        if (state !== 'PLAYING') return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        
+        isDragging = true;
+        lastX = x;
+
+        // Halka Seçimi
+        const cx = width / 2;
+        const cy = height / 2;
+        const dist = Math.sqrt((x - cx)**2 + (y - cy)**2);
+
+        let bestRing = -1;
+        let minDiff = 9999;
+
+        // En yakın halkayı bul
+        rings.forEach((r, i) => {
+            let diff = Math.abs(dist - r.r);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestRing = i;
+            }
+        });
+
+        // Eğer yakınsa seç (Tolerans 40px - Genişletildi)
+        if (minDiff < 40) {
+            selectedRingIndex = bestRing;
+            document.getElementById('statusText').innerText = (bestRing+1) + ". HALKA SEÇİLDİ";
+        }
+    }, {passive: false});
+
+    // 2. ÇEVİRME (TOUCHMOVE)
+    canvas.addEventListener('touchmove', e => {
+        if (!isDragging || state !== 'PLAYING') return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const x = touch.clientX - canvas.getBoundingClientRect().left;
+        
+        let delta = x - lastX;
+        inputVelocity += delta * 0.008; // Hassasiyet
+        lastX = x;
+    }, {passive: false});
+
+    window.addEventListener('touchend', () => isDragging = false);
+
+    // KLAVYE
+    window.addEventListener('keydown', e => {
+        if (state !== 'PLAYING') return;
+        if(e.key === 'ArrowRight') inputVelocity += 0.05;
+        if(e.key === 'ArrowLeft') inputVelocity -= 0.05;
+        if(e.key === 'ArrowUp' && selectedRingIndex < rings.length-1) selectedRingIndex++;
+        if(e.key === 'ArrowDown' && selectedRingIndex > 0) selectedRingIndex--;
+        if(e.key === ' ' || e.key === 'Enter') shoot();
+    });
+
+    document.getElementById('shootBtn').addEventListener('click', shoot);
+
+    function shoot() {
+        if (state !== 'PLAYING') return;
+        ball.angle = launcher.angle;
+        ball.speed = 15; // Hızlı top
+        state = 'MOVING';
+    }
+
+    function update() {
+        launcher.angle += launcher.rotationSpeed;
+
+        // Seçili halkayı döndür
+        if (state === 'PLAYING') {
+            let r = rings[selectedRingIndex];
+            r.velocity += inputVelocity;
+            inputVelocity = 0;
+            r.velocity *= FRICTION;
+            if (Math.abs(r.velocity) < 0.0001) r.velocity = 0;
+            r.angle += r.velocity;
+        }
+
+        // Otomatik dönüş
+        rings.forEach((r, i) => {
+            if (i !== selectedRingIndex) r.angle += r.autoSpeed;
+        });
+
+        // Top Hareketi
+        if (state === 'MOVING') {
+            ball.dist += ball.speed;
+            
+            if (activeRingIndex < rings.length) {
+                let target = rings[activeRingIndex];
+                let edge = target.r - target.thickness/2; // İç kenar
+
+                if (ball.dist >= edge) {
+                    // Çarpışma Kontrolü
+                    let bA = normalizeAngle(ball.angle);
+                    let rA = normalizeAngle(target.angle);
+                    let diff = Math.abs(angleDifference(bA, rA));
+
+                    // Boşluktan geçiyor mu?
+                    if (diff < (target.gapSize/2) * 0.85) {
+                        activeRingIndex++; // Geçti
+                        if (activeRingIndex >= rings.length) {
+                            state = 'WON';
+                            setTimeout(() => document.getElementById('winModal').classList.add('active'), 300);
+                        }
+                    } else {
+                        // Çarptı
+                        ball.speed = -5;
+                        state = 'LOST';
+                        setTimeout(() => {
+                            state = 'PLAYING'; ball.dist = 0; ball.speed = 0; activeRingIndex = 0;
+                        }, 300);
+                    }
+                }
+            }
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        let cx = width/2, cy = height/2;
+
+        rings.forEach((r, i) => {
+            let isSelected = (i === selectedRingIndex);
+            let isPassed = (i < activeRingIndex);
+            let isTarget = (i === activeRingIndex);
+
+            // RENK PALETİ
+            let color = '#333'; 
+            if (isPassed) color = '#00ff00'; // Yeşil (Geçildi)
+            else if (isTarget) color = '#0088ff'; // Mavi (Hedef)
+            
+            // SEÇİLİ İSE SARI VE PARLAK
+            if (isSelected) {
+                color = '#ffd700'; // ALTIN SARISI
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#ffd700';
+                ctx.lineWidth = r.thickness + 4; // Biraz daha kalın
+            } else {
+                ctx.shadowBlur = 0;
+                ctx.lineWidth = r.thickness;
+            }
+
+            ctx.strokeStyle = color;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            let start = r.angle + r.gapSize/2;
+            let end = r.angle - r.gapSize/2;
+            ctx.arc(cx, cy, r.r, start, end);
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
+        });
+
+        // OK (Launcher)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(launcher.angle);
+        ctx.fillStyle = '#ff0055';
+        ctx.shadowBlur = 15; ctx.shadowColor = '#ff0055';
+        ctx.beginPath(); ctx.moveTo(20,0); ctx.lineTo(-5,8); ctx.lineTo(-5,-8); ctx.fill();
+        ctx.restore();
+
+        // TOP
+        if (ball.dist > 0) {
+            let bx = cx + Math.cos(ball.angle)*ball.dist;
+            let by = cy + Math.sin(ball.angle)*ball.dist;
+            ctx.fillStyle = '#fff'; ctx.shadowBlur=10; ctx.shadowColor='#fff';
+            ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    document.getElementById('nextLvlBtn').addEventListener('click', () => {
+        level++; initLevel(level);
+        document.getElementById('winModal').classList.remove('active');
+    });
+
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>

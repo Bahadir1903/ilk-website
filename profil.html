@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEBAR - Profil</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+    <div id="star-container"></div>
+
+    <header>
+        <a href="index.html">
+            <div class="logo">MEBAR <span class="highlight">STÜDYO</span></div>
+        </a>
+        <nav>
+            <a href="profil.html" class="nav-item active-page"><span class="icon">👤</span> Profil</a>
+            <a href="hesaplamalar.html" class="nav-item"><span class="icon">⚡</span> Hesaplamalar</a>
+            <a href="oyunlar.html" class="nav-item"><span class="icon">🎮</span> Oyunlar</a>
+        </nav>
+    </header>
+
+    <main class="profile-layout">
+        
+        <div class="top-section">
+            
+            <div class="panel-box login-box" id="main-panel">
+                
+                <div class="system-status">
+                    <div id="status-led" class="led-yellow"></div>
+                    <span id="status-text" class="status-text" style="color:#ffcc00;">GİRİŞ BEKLENİYOR</span>
+                </div>
+
+                <div id="login-form-area">
+                    <h3>Sistem Girişi</h3>
+                    <form class="compact-form">
+                        <div class="input-row">
+                            <input type="text" id="login-user" placeholder="E-Posta">
+                            <input type="password" id="login-pass" placeholder="Şifre">
+                        </div>
+                        <button type="button" class="login-btn" onclick="systemLogin()">GİRİŞ YAP</button>
+                    </form>
+                    
+                    <p class="bottom-link">
+                        Hesabın yok mu? <a href="kayit.html" style="color:var(--accent-color);">Yeni Hesap Aç</a>
+                    </p>
+                </div>
+
+                <div id="dashboard-area" class="hidden">
+                    <h3 id="welcome-title" style="color:#fff;">Hoş Geldin</h3>
+                    <button type="button" class="logout-btn" onclick="location.reload()">ÇIKIŞ YAP</button>
+                </div>
+
+            </div>
+
+            <div class="panel-box about-box">
+                <h3>Hakkımda</h3>
+                <p>
+                    Kocaeli Üniversitesi Bilgisayar Programcılığı bölümünde eğitim görmekteyim.
+                </p>
+                <p>
+                    Bu platform; mühendislik hesaplamaları, oyun geliştirme projeleri ve dijital girişimcilik vizyonunu
+                    tek bir çatı altında toplamak amacıyla tasarlanmış deneysel bir üretim üssüdür.
+                </p>
+                <div class="tags">
+                    <span>#Girişimcilik</span>
+                    <span>#Mühendislik</span>
+                    <span>#OyunDev</span>
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="separator-white">
+
+        <div class="bottom-section">
+            <div class="bg-text-bottom">MEBAR</div>
+            
+            <img src="profil_transparent.png" alt="Founder" class="full-img">
+            
+            <div class="bottom-fog"></div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Geliştirici: <strong>Mehmet Emin Bahadır</strong> © 2024</p>
+    </footer>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
