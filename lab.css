@@ -1,6 +1,7 @@
 /* ================================================
    LAB.CSS - MÜHENDİSLİK MODÜLÜ & HESAPLAMA KONSOLU
    MEBAR Studio - 2025
+   Mobile Responsive Edition
    ================================================ */
 
 /* --- HESAPLAMA KONSOLU --- */
@@ -520,20 +521,16 @@
     border-bottom: 1px solid #333;
 }
 
-/* --- GÜNCELLENMİŞ SEKME BUTONLARI (SIĞDIRMA AYARLI) --- */
 .tab-btn {
-    flex: 1; /* Hepsi eşit alan kaplasın */
+    flex: 1;
     background: #111;
     border: none;
-    
-    /* ÖNEMLİ AYARLAR BURADA */
-    padding: 12px 2px !important; /* Yan boşlukları azalttık */
-    font-size: 0.8rem !important; /* Yazı boyutu ideal seviyeye indi */
-    letter-spacing: 0.5px; /* Harf aralığını biraz kıstık */
-    white-space: nowrap; /* Asla alt satıra geçmesin */
-    overflow: hidden; /* Taşarsa gizle */
-    text-overflow: ellipsis; /* Çok taşarsa ... koy */
-    
+    padding: 12px 2px !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: #666;
     font-weight: bold;
     cursor: pointer;
@@ -549,13 +546,11 @@
     background: #1a1a1a;
 }
 
-/* Aktif olunca parlasın */
 .active-tab {
     color: #00f2ff;
     border-bottom: 2px solid #00f2ff;
     background: #151515;
 }
-
 
 .tab-content {
     flex: 1;
@@ -713,7 +708,11 @@
     transform: translateX(5px);
 }
 
-/* --- MOBİL UYUMLULUK (LAB) --- */
+/* ================================================
+   MOBİL UYUMLULUK - RESPONSIVE DESIGN
+   ================================================ */
+
+/* Tablet ve Küçük Ekranlar (1100px ve altı) */
 @media screen and (max-width: 1100px) {
     .lab-layout {
         flex-direction: column;
@@ -723,40 +722,374 @@
         width: 100%;
         height: auto;
         min-height: 400px;
+        min-width: auto;
+    }
+    
+    .res-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
     }
 }
 
+/* Tablet (768px - 1100px) */
+@media screen and (max-width: 900px) {
+    .calc-layout {
+        padding: 20px 15px;
+    }
+    
+    .engineering-console {
+        min-height: auto;
+    }
+    
+    .modules-list {
+        width: 240px;
+    }
+    
+    .calc-screen {
+        padding: 25px 20px;
+        background-size: 30px 30px;
+    }
+    
+    .formulas-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+    }
+    
+    .lab-right {
+        height: 500px;
+    }
+    
+    .pro-inputs {
+        flex-wrap: wrap;
+    }
+    
+    .pro-input-group {
+        min-width: 45%;
+    }
+}
+
+/* Mobil (768px ve altı) */
 @media screen and (max-width: 768px) {
-    .lab-layout {
-        flex-direction: column;
+    .calc-layout {
+        padding: 15px 10px;
+        min-height: auto;
     }
 
     .engineering-console {
         flex-direction: column;
-        border: none;
-        background: transparent;
+        border-radius: 8px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.6);
     }
 
     .modules-list {
         width: 100%;
-        max-height: 250px;
+        max-height: 300px;
         border-right: none;
         border-bottom: 1px solid #333;
-        margin-bottom: 20px;
+    }
+    
+    .list-header {
+        padding: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .module-item {
+        padding: 12px 15px;
+        gap: 12px;
+    }
+    
+    .mod-icon {
+        font-size: 1.3rem;
+    }
+    
+    .mod-name {
+        font-size: 0.9rem;
+    }
+    
+    .mod-desc {
+        font-size: 0.7rem;
     }
 
     .calc-screen {
-        padding: 20px 10px;
+        padding: 20px 12px;
+        background-size: 25px 25px;
+    }
+    
+    .panel-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
     }
 
     .formulas-grid {
         grid-template-columns: 1fr;
         max-height: none;
-    }
-
-    .tab-btn {
-        padding: 15px 0;
-        font-size: 0.9rem;
+        gap: 15px;
     }
     
+    .formula-card {
+        padding: 12px;
+    }
+
+    /* Lab Layout Mobile */
+    .lab-layout {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .lab-left {
+        width: 100%;
+    }
+    
+    .simulation-stage {
+        height: 180px;
+    }
+    
+    .bar-3d {
+        width: 150px;
+        height: 30px;
+    }
+    
+    .pro-inputs {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pro-input-group {
+        width: 100%;
+    }
+    
+    .cyber-btn {
+        padding: 12px;
+        font-size: 1rem;
+        letter-spacing: 2px;
+    }
+    
+    .material-library {
+        height: 350px;
+        min-width: auto;
+    }
+    
+    .lib-header {
+        padding: 12px;
+        font-size: 0.75rem;
+    }
+    
+    .mat-row {
+        padding: 10px 12px;
+    }
+    
+    .mat-name {
+        font-size: 0.85rem;
+    }
+
+    /* Sağ Panel Mobile */
+    .lab-right {
+        width: 100%;
+        height: auto;
+        min-height: 450px;
+        min-width: auto;
+    }
+
+    .lab-tabs {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-btn {
+        padding: 12px 8px !important;
+        font-size: 0.75rem !important;
+        min-width: 80px;
+        letter-spacing: 0.3px;
+    }
+    
+    .force-controls {
+        padding: 15px;
+    }
+    
+    .add-force-btn-big {
+        padding: 14px;
+        font-size: 1rem;
+    }
+    
+    .total-force-badge {
+        font-size: 1rem;
+    }
+    
+    .force-card {
+        padding: 12px 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .force-card span {
+        font-size: 1.1rem;
+    }
+    
+    .force-card input {
+        width: 100px;
+        font-size: 1.2rem;
+    }
+    
+    .pro-result {
+        padding: 15px;
+    }
+    
+    .res-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .res-val {
+        font-size: 1.3rem;
+    }
+    
+    .final-status {
+        font-size: 1.1rem;
+    }
+    
+    #log-list-dom {
+        height: 280px;
+    }
+    
+    .log-item {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
 }
+
+/* Küçük Mobil (480px ve altı) */
+@media screen and (max-width: 480px) {
+    .calc-layout {
+        padding: 10px 5px;
+    }
+    
+    .engineering-console {
+        border-radius: 5px;
+    }
+    
+    .modules-list {
+        max-height: 250px;
+    }
+    
+    .module-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .mod-icon {
+        font-size: 1.2rem;
+    }
+    
+    .mod-name {
+        font-size: 0.85rem;
+    }
+    
+    .mod-desc {
+        font-size: 0.65rem;
+    }
+    
+    .calc-screen {
+        padding: 15px 10px;
+        background-size: 20px 20px;
+    }
+    
+    .panel-header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .live-indicator {
+        font-size: 0.75rem;
+    }
+    
+    .formula-card {
+        padding: 10px;
+    }
+    
+    .card-header {
+        font-size: 0.85rem;
+    }
+    
+    .mini-inputs input {
+        padding: 6px;
+        font-size: 0.85rem;
+    }
+    
+    .mini-btn {
+        padding: 6px;
+        font-size: 0.75rem;
+    }
+    
+    .simulation-stage {
+        height: 150px;
+    }
+    
+    .bar-3d {
+        width: 120px;
+        height: 25px;
+    }
+    
+    .cyber-btn {
+        padding: 10px;
+        font-size: 0.9rem;
+        letter-spacing: 1.5px;
+    }
+    
+    .material-library {
+        height: 300px;
+    }
+    
+    .lib-header {
+        padding: 10px;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+    
+    .mat-row {
+        padding: 8px 10px;
+    }
+    
+    .mat-name {
+        font-size: 0.8rem;
+    }
+    
+    .mat-val {
+        font-size: 0.65rem;
+    }
+    
+    .mat-color-indicator {
+        width: 10px;
+        height: 10px;
+        margin-right: 8px;
+    }
+    
+    .tab-btn {
+        padding: 10px 5px !important;
+        font-size: 0.7rem !important;
+        min-width: 70px;
+        letter-spacing: 0.2px;
+    }
+    
+    .force-controls {
+        padding: 12px;
+    }
+    
+    .add-force-btn-big {
+        padding: 12px;
+        font-size: 0.9rem;
+        gap: 8px;
+    }
+    
+    .total-force-badge {
+        font-size: 0.9rem;
+        margin-top: 12px;
+    }
+    
+    .force-list-animated {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .force-card {
+        padding: 10px 12px
