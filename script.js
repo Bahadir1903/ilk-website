@@ -3,15 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // --- SENİN FIREBASE AYARLARIN ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyCPmPnN6B8GDb4MlvjdvzkosjF7QEkgQug",
-    authDomain: "mebarstudyo.firebaseapp.com",
-    projectId: "mebarstudyo",
-    storageBucket: "mebarstudyo.firebasestorage.app",
-    messagingSenderId: "64137578522",
-    appId: "1:64137578522:web:2196fa44befbf1e74069a3",
-    measurementId: "G-29BJC17H6L"
-  };
+
 
 // Firebase'i Başlat
 const app = initializeApp(firebaseConfig);
@@ -441,4 +433,5 @@ document.addEventListener("DOMContentLoaded", () => {
     // logResultToHistory(selectedMat.name, stress.toFixed(2), (stress < limit ? "GÜVENLİ" : "İFLAS"), (stress < limit));
 
     renderMaterialList();
+
 });
